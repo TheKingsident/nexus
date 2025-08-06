@@ -15,8 +15,28 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
+@api_view(['GET'])
+def api_root(request):
+    """API root endpoint"""
+    return Response({
+        'message': 'Welcome to Nexus Movie Recommendation API',
+        'endpoints': {
+            'movies': '/api/movies/',
+            'genres': '/api/genres/',
+            'users': '/api/users/',
+            'admin': '/admin/',
+        }
+    })
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', api_root, name='api-root'),
+    path('api/', include('movies.urls')),
+    path('api/users/', include('users.urls')),
 ]
