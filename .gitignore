@@ -64,7 +64,4 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-nexus/settings.py
 .gitignore
-movies/management/commands/fetch_tmdb_movies.py
-nexus/settings.py
