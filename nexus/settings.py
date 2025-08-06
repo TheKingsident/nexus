@@ -137,9 +137,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # TMDb API Settings
-TMDB_API_KEY = config('TMDB_API_KEY', default='your_tmdb_api_key_here')
-TMDB_BASE_URL = config('TMDB_BASE_URL', default='https://api.themoviedb.org/3')
-TMDB_IMAGE_BASE_URL = config('TMDB_IMAGE_BASE_URL', default='https://image.tmdb.org/t/p')
+TMDB_API_KEY = config('TMDB_API_KEY')
+TMDB_BASE_URL = config('TMDB_BASE_URL')
+TMDB_IMAGE_BASE_URL = config('TMDB_IMAGE_BASE_URL')
 
 # Django REST Framework settings
 REST_FRAMEWORK = {
