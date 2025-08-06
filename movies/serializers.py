@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Genre, Movie
+from .models import Genre, Movie, FavoriteMovie  # Add FavoriteMovie import
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -29,7 +29,6 @@ class MovieSerializer(serializers.ModelSerializer):
 
 
 class MovieListSerializer(serializers.ModelSerializer):
-    """Simplified serializer for movie lists"""
     genres = serializers.StringRelatedField(many=True, read_only=True)
     poster_url = serializers.ReadOnlyField()
     
@@ -40,3 +39,20 @@ class MovieListSerializer(serializers.ModelSerializer):
             'poster_url', 'vote_average', 'vote_count', 'genres'
         ]
         read_only_fields = ['id']
+
+
+class FavoriteMovieSerializer(serializers.ModelSerializer):
+    movie = MovieListSerializer(read_only=True)
+    movie_id = serializers.IntegerField(write_only=True)  # For creating favorites
+    
+    class Meta:
+        model = FavoriteMovie  # Fix: was Movie, should be FavoriteMovie
+        fields = ['id', 'movie', 'movie_id', 'added_at']
+        read_only_fields = ['id', 'added_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        movie_id = validated_data['movie_id']
+        movie = Movie.objects.get(id=movie_id)
+        favorite, created = FavoriteMovie.objects.get_or_create(user=user, movie=movie)
+        return favorite

@@ -46,3 +46,16 @@ class Movie(models.Model):
         if self.poster_path:
             return f"https://image.tmdb.org/t/p/w500{self.poster_path}"
         return None
+
+class FavoriteMovie(models.Model):
+    """User's favorite movies"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_movies')
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='favorited_by')
+    added_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'movie')
+        ordering = ['-added_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.movie.title}"

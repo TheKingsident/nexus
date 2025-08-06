@@ -1,10 +1,11 @@
-from rest_framework import generics, filters
-from rest_framework.decorators import api_view
+from rest_framework import generics, filters, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from .models import Genre, Movie
-from .serializers import GenreSerializer, MovieSerializer, MovieListSerializer
+from .models import Genre, Movie, FavoriteMovie
+from .serializers import GenreSerializer, MovieSerializer, MovieListSerializer, FavoriteMovieSerializer
 from .filters import MovieFilter
 
 
@@ -62,6 +63,17 @@ class RecentMoviesView(generics.ListAPIView):
         return Movie.objects.order_by('-created_at')[:20]
 
 
+class FavoriteMoviesView(generics.ListAPIView):
+    """List user's favorite movies"""
+    serializer_class = MovieListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        favorite_movies = FavoriteMovie.objects.filter(user=user).select_related('movie')
+        return [fav.movie for fav in favorite_movies]  # Return actual Movie objects
+
+
 @api_view(['GET'])
 def movie_search(request):
     """Advanced movie search"""
@@ -99,3 +111,32 @@ def movie_search(request):
         'count': movies.count(),
         'results': serializer.data
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_favorite(request, movie_id):
+    """Add movie to user's favorites"""
+    try:
+        movie = Movie.objects.get(id=movie_id)
+        favorite, created = FavoriteMovie.objects.get_or_create(
+            user=request.user, 
+            movie=movie
+        )
+        if created:
+            return Response({'message': 'Movie added to favorites'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'message': 'Movie already in favorites'}, status=status.HTTP_200_OK)
+    except Movie.DoesNotExist:
+        return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_favorite(request, movie_id):
+    """Remove movie from user's favorites"""
+    try:
+        favorite = FavoriteMovie.objects.get(user=request.user, movie_id=movie_id)
+        favorite.delete()
+        return Response({'message': 'Movie removed from favorites'}, status=status.HTTP_204_NO_CONTENT)
+    except FavoriteMovie.DoesNotExist:
+        return Response({'error': 'Movie not in favorites'}, status=status.HTTP_404_NOT_FOUND)
