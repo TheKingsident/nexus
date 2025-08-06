@@ -23,7 +23,7 @@ class Movie(models.Model):
     
     # TMDb specific fields
     poster_path = models.CharField(max_length=255, blank=True)
-    backdrop_path = models.CharField(max_length=255, blank=True)
+    backdrop_path = models.CharField(max_length=255, blank=True, null=True)
     vote_average = models.FloatField(default=0.0)
     vote_count = models.IntegerField(default=0)
     

@@ -4,15 +4,15 @@ from django.conf import settings
 from movies.models import Movie, Genre
 import os
 
-TMDB_API_KEY = os.environ.get('TMDB_API_KEY')
-TMDB_BASE_URL = os.environ.get('TMDB_BASE_URL')
+TMDB_API_KEY = settings.TMDB_API_KEY
+TMDB_BASE_URL = settings.TMDB_BASE_URL
 
 class Command(BaseCommand):
     help = 'Fetches popular movies from TMDb and saves them to the database'
 
     def handle(self, *args, **options):
         url = f"{TMDB_BASE_URL}/movie/popular"
-        params = {'api_key': TMDB_API_KEY, 'language': 'en-US', 'page': 1}
+        params = {'api_key': TMDB_API_KEY, 'language': 'en-US', 'page': 3}
         response = requests.get(url, params=params)
         data = response.json()
 

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django_filters',
     'movies',
     'users',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
