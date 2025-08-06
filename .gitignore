@@ -73,4 +73,3 @@ nexus/urls.py
 nexus/settings.py
 movies/filters.py
 .gitignore
-movies/urls.py
