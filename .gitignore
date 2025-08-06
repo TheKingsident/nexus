@@ -64,11 +64,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-users/views.py
-users/views.py
-users/views.py
 users/urls.py
-users/serializers.py
 nexus/urls.py
 nexus/settings.py
 movies/filters.py
