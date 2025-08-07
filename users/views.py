@@ -10,6 +10,7 @@ from .serializers import (
     UserSerializer, UserProfileSerializer, UserRegistrationSerializer, 
     UserProfileUpdateSerializer
 )
+from .tasks import send_welcome_email
 
 
 class UserRegistrationView(generics.CreateAPIView):
@@ -21,7 +22,11 @@ class UserRegistrationView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
         user = serializer.save()
+
+        send_welcome_email.delay(user.email,
+                                 user.username)
         
         # Create token for the new user
         token, created = Token.objects.get_or_create(user=user)
