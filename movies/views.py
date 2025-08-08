@@ -7,6 +7,8 @@ from django.db.models import Q
 from .models import Genre, Movie, FavoriteMovie
 from .serializers import GenreSerializer, MovieSerializer, MovieListSerializer, FavoriteMovieSerializer
 from .filters import MovieFilter
+from datetime import timedelta
+from django.utils import timezone
 
 
 class GenreListView(generics.ListAPIView):
@@ -74,7 +76,6 @@ class UpcomingMoviesView(generics.ListAPIView):
     pagination_class = None
     
     def get_queryset(self):
-        from django.utils import timezone
         return Movie.objects.filter(
             release_date__gte=timezone.now().date()
         ).order_by('release_date')[:20]
@@ -87,9 +88,6 @@ class NowPlayingMoviesView(generics.ListAPIView):
     pagination_class = None
     
     def get_queryset(self):
-        from django.utils import timezone
-        from datetime import timedelta
-        
         # Movies released in the last 6 months
         six_months_ago = timezone.now().date() - timedelta(days=180)
         return Movie.objects.filter(
@@ -116,6 +114,34 @@ class FavoriteMoviesView(generics.ListAPIView):
         user = self.request.user
         favorite_movies = FavoriteMovie.objects.filter(user=user).select_related('movie')
         return [fav.movie for fav in favorite_movies]  # Return actual Movie objects
+
+
+class TrendingDayMoviesView(generics.ListAPIView):
+    """Get trending movies today"""
+    serializer_class = MovieListSerializer
+    permission_classes = []
+    pagination_class = None
+    
+    def get_queryset(self):
+        # Return movies with high recent vote activity (proxy for trending)
+        return Movie.objects.filter(
+            vote_count__gte=50,
+            created_at__gte=timezone.now() - timedelta(days=7)  # Recently added
+        ).order_by('-vote_average', '-vote_count')[:20]
+
+
+class TrendingWeekMoviesView(generics.ListAPIView):
+    """Get trending movies this week"""
+    serializer_class = MovieListSerializer
+    permission_classes = []
+    pagination_class = None
+    
+    def get_queryset(self):
+        # Return movies with high vote counts and ratings (proxy for trending)
+        return Movie.objects.filter(
+            vote_count__gte=100,
+            created_at__gte=timezone.now() - timedelta(days=30)  # Recently added
+        ).order_by('-vote_count', '-vote_average')[:20]
 
 
 @api_view(['GET'])
