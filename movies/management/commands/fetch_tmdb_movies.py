@@ -25,7 +25,9 @@ class Command(BaseCommand):
             'movie/popular',
             'movie/top_rated', 
             'movie/upcoming',
-            'movie/now_playing'
+            'movie/now_playing',
+            'trending/movie/day',    # NEW: Trending today
+            'trending/movie/week'    # NEW: Trending this week
         ]
         
         # First, fetch and cache genres
