@@ -59,3 +59,21 @@ class FavoriteMovie(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.movie.title}"
+
+class TrendingMovie(models.Model):
+    """Track trending movies by day/week"""
+    TRENDING_PERIOD_CHOICES = [
+        ('day', 'Day'),
+        ('week', 'Week'),
+    ]
+    
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='trending_periods')
+    period = models.CharField(max_length=10, choices=TRENDING_PERIOD_CHOICES)
+    trending_date = models.DateField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('movie', 'period', 'trending_date')
+        ordering = ['-trending_date']
+    
+    def __str__(self):
+        return f"{self.movie.title} - Trending {self.period} ({self.trending_date})"
