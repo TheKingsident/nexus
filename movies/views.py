@@ -9,8 +9,11 @@ from .serializers import GenreSerializer, MovieSerializer, MovieListSerializer, 
 from .filters import MovieFilter
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 
+@method_decorator(cache_page(60 * 60), name='dispatch')
 class GenreListView(generics.ListAPIView):
     """List all genres"""
     queryset = Genre.objects.all()
@@ -44,6 +47,7 @@ class MovieDetailView(generics.RetrieveAPIView):
     permission_classes = []
 
 
+@method_decorator(cache_page(60 * 30), name='dispatch')
 class PopularMoviesView(generics.ListAPIView):
     """Get popular movies (high vote average and count)"""
     serializer_class = MovieListSerializer
@@ -116,6 +120,7 @@ class FavoriteMoviesView(generics.ListAPIView):
         return [fav.movie for fav in favorite_movies]  # Return actual Movie objects
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class TrendingDayMoviesView(generics.ListAPIView):
     """Get trending movies today"""
     serializer_class = MovieListSerializer
