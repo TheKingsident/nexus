@@ -46,6 +46,7 @@ class PopularMoviesView(generics.ListAPIView):
     """Get popular movies (high vote average and count)"""
     serializer_class = MovieListSerializer
     permission_classes = []
+    pagination_class = None  # Disable pagination for this view
     
     def get_queryset(self):
         return Movie.objects.filter(
@@ -54,8 +55,51 @@ class PopularMoviesView(generics.ListAPIView):
         ).order_by('-vote_average', '-vote_count')[:20]
 
 
+class TopRatedMoviesView(generics.ListAPIView):
+    """Get top rated movies"""
+    serializer_class = MovieListSerializer
+    permission_classes = []
+    pagination_class = None
+    
+    def get_queryset(self):
+        return Movie.objects.filter(
+            vote_count__gte=50
+        ).order_by('-vote_average', '-vote_count')[:20]
+
+
+class UpcomingMoviesView(generics.ListAPIView):
+    """Get upcoming movies"""
+    serializer_class = MovieListSerializer
+    permission_classes = []
+    pagination_class = None
+    
+    def get_queryset(self):
+        from django.utils import timezone
+        return Movie.objects.filter(
+            release_date__gte=timezone.now().date()
+        ).order_by('release_date')[:20]
+
+
+class NowPlayingMoviesView(generics.ListAPIView):
+    """Get now playing movies (recently released)"""
+    serializer_class = MovieListSerializer
+    permission_classes = []
+    pagination_class = None
+    
+    def get_queryset(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Movies released in the last 6 months
+        six_months_ago = timezone.now().date() - timedelta(days=180)
+        return Movie.objects.filter(
+            release_date__gte=six_months_ago,
+            release_date__lte=timezone.now().date()
+        ).order_by('-release_date')[:20]
+
+
 class RecentMoviesView(generics.ListAPIView):
-    """Get recently added movies"""
+    """Get recently added movies to our database"""
     serializer_class = MovieListSerializer
     permission_classes = []
     
