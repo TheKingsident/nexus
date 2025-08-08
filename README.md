@@ -309,7 +309,7 @@ Authorization: Token your_auth_token
 - `DELETE /api/favorites/remove/{movie_id}/` - Remove from favorites
 
 ### Interactive Documentation
-- **Swagger UI:** http://localhost:8000/swagger/
+- **Swagger UI:** http://localhost:8000/swagger/, http://localhost:8000/api/docs/
 - **ReDoc:** http://localhost:8000/redoc/
 
 ## Data Management
