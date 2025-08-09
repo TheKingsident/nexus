@@ -170,3 +170,18 @@ CACHES = {
         }
     }
 }
+
+import sys
+if "createsuperuser" in sys.argv:
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    username = os.getenv("DJANGO_SUPERUSER_USERNAME")
+    email = os.getenv("DJANGO_SUPERUSER_EMAIL")
+    password = os.getenv("DJANGO_SUPERUSER_PASSWORD")
+
+    if username and email and password:
+        try:
+            User.objects.create_superuser(username=username, email=email, password=password)
+            print("Superuser created successfully.")
+        except:
+            print("Superuser already exists.")
