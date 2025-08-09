@@ -171,17 +171,34 @@ CACHES = {
     }
 }
 
-import sys
-if "createsuperuser" in sys.argv:
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    username = os.getenv("DJANGO_SUPERUSER_USERNAME")
-    email = os.getenv("DJANGO_SUPERUSER_EMAIL")
-    password = os.getenv("DJANGO_SUPERUSER_PASSWORD")
+# Auto-create superuser if environment variables are set
+if os.environ.get("DJANGO_SUPERUSER_USERNAME") and \
+   os.environ.get("DJANGO_SUPERUSER_EMAIL") and \
+   os.environ.get("DJANGO_SUPERUSER_PASSWORD"):
 
-    if username and email and password:
-        try:
-            User.objects.create_superuser(username=username, email=email, password=password)
-            print("Superuser created successfully.")
-        except:
-            print("Superuser already exists.")
+    # This runs only when calling 'python manage.py createsuperuser --noinput'
+    from django.core.management.base import BaseCommand
+    from django.contrib.auth import get_user_model
+
+    def create_default_superuser():
+        User = get_user_model()
+        username = os.environ["DJANGO_SUPERUSER_USERNAME"]
+        email = os.environ["DJANGO_SUPERUSER_EMAIL"]
+        password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
+
+        if not User.objects.filter(username=username).exists():
+            User.objects.create_superuser(
+                username=username,
+                email=email,
+                password=password
+            )
+            print(f"Superuser '{username}' created successfully.")
+        else:
+            print(f"Superuser '{username}' already exists.")
+
+    # We patch the default 'createsuperuser' command to be noinput-friendly
+    class Command(BaseCommand):
+        help = "Creates a superuser without interactive prompts if env vars are set"
+
+        def handle(self, *args, **options):
+            create_default_superuser()
