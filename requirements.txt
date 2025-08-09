@@ -16,6 +16,7 @@ django-filter==23.5
 django-redis==6.0.0
 djangorestframework==3.14.0
 drf-yasg==1.21.10
+gunicorn==23.0.0
 idna==3.10
 inflection==0.5.1
 kombu==5.5.4
