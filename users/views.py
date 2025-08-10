@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import UserProfile
 from .serializers import (
     UserSerializer, UserProfileSerializer, UserRegistrationSerializer, 
@@ -13,6 +15,7 @@ from .serializers import (
 from .tasks import send_welcome_email
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UserRegistrationView(generics.CreateAPIView):
     """User registration endpoint"""
     queryset = User.objects.all()
