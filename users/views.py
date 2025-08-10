@@ -25,8 +25,23 @@ class UserRegistrationView(generics.CreateAPIView):
         
         user = serializer.save()
 
-        send_welcome_email.delay(user.email,
-                                 user.username)
+        # Try to send email via Celery, fallback to synchronous if failed
+        try:
+            send_welcome_email.delay(user.email, user.username)
+        except Exception as e:
+            # If Celery is not available, send email synchronously
+            from django.core.mail import send_mail
+            from django.conf import settings
+            try:
+                send_mail(
+                    'Welcome to Nexus!',
+                    f'Hi {user.username},\n\nThank you for registering at Nexus. We are excited to have you on board!',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass  # Don't fail registration if email fails
         
         # Create token for the new user
         token, created = Token.objects.get_or_create(user=user)

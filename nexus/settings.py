@@ -206,13 +206,6 @@ if not DEBUG:
         CORS_ALLOWED_ORIGINS.extend(cors_origins.split(','))
 
 # =========================
-# Celery settings (Railway Redis + RabbitMQ optional)
-# =========================
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default=config('REDIS_URL'))
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default=config('REDIS_URL'))
-# =========================
 # Email settings
 # =========================
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
