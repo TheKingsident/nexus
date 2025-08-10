@@ -6,3 +6,16 @@ healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# Define multiple processes
+[[services]]
+name = "web"
+command = "mkdir -p staticfiles && python manage.py collectstatic --noinput && python manage.py migrate && gunicorn nexus.wsgi:application --bind 0.0.0.0:$PORT"
+
+[[services]]
+name = "worker"
+command = "celery -A nexus worker --loglevel=info"
+
+[[services]]
+name = "beat"
+command = "celery -A nexus beat --loglevel=info"

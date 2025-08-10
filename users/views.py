@@ -25,25 +25,36 @@ class UserRegistrationView(generics.CreateAPIView):
         
         user = serializer.save()
 
-        # For now, send email synchronously since Celery worker may not be running on Railway
-        from django.core.mail import send_mail
-        from django.conf import settings
-        import logging
-        
-        logger = logging.getLogger(__name__)
-        
+        # Try Celery first, fallback to synchronous
         try:
-            result = send_mail(
-                'Welcome to Nexus!',
-                f'Hi {user.username},\n\nThank you for registering at Nexus. We are excited to have you on board!',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
-            logger.info(f"Welcome email sent successfully to {user.email}, result: {result}")
+            # Test if Celery is available
+            from celery import current_app
+            celery_status = current_app.control.inspect().stats()
+            if celery_status:
+                # Celery is available, use async task
+                send_welcome_email.delay(user.email, user.username)
+            else:
+                raise Exception("No Celery workers available")
         except Exception as e:
-            logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
-            # Don't fail registration if email fails
+            # Fallback to synchronous email
+            from django.core.mail import send_mail
+            from django.conf import settings
+            import logging
+            
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Celery not available, sending email synchronously: {str(e)}")
+            
+            try:
+                result = send_mail(
+                    'Welcome to Nexus!',
+                    f'Hi {user.username},\n\nThank you for registering at Nexus. We are excited to have you on board!',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                logger.info(f"Welcome email sent synchronously to {user.email}, result: {result}")
+            except Exception as email_error:
+                logger.error(f"Failed to send welcome email to {user.email}: {str(email_error)}")
         
         # Create token for the new user
         token, created = Token.objects.get_or_create(user=user)
