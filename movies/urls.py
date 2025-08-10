@@ -19,13 +19,13 @@ urlpatterns = [
     path('movies/<int:pk>/', MovieDetailView.as_view(), name='movie-detail'),
     
     # Movie Categories
-    path('movies/popular/', PopularMoviesView.as_view(), name='popular-movies'),
-    path('movies/top-rated/', TopRatedMoviesView.as_view(), name='top-rated-movies'),
-    path('movies/upcoming/', UpcomingMoviesView.as_view(), name='upcoming-movies'),
-    path('movies/now-playing/', NowPlayingMoviesView.as_view(), name='now-playing-movies'),
-    path('movies/trending/day/', TrendingDayMoviesView.as_view(), name='trending-day-movies'),      # NEW
-    path('movies/trending/week/', TrendingWeekMoviesView.as_view(), name='trending-week-movies'),   # NEW
-    path('movies/recent/', RecentMoviesView.as_view(), name='recent-movies'),
+    path('popular/', PopularMoviesView.as_view(), name='popular-movies'),
+    path('top-rated/', TopRatedMoviesView.as_view(), name='top-rated-movies'),
+    path('upcoming/', UpcomingMoviesView.as_view(), name='upcoming-movies'),
+    path('now-playing/', NowPlayingMoviesView.as_view(), name='now-playing-movies'),
+    path('trending/day/', TrendingDayMoviesView.as_view(), name='trending-day-movies'),      # NEW
+    path('trending/week/', TrendingWeekMoviesView.as_view(), name='trending-week-movies'),   # NEW
+    path('recent/', RecentMoviesView.as_view(), name='recent-movies'),
     
     # Search & Favorites
     path('search/', movie_search, name='movie-search'),
