@@ -73,25 +73,34 @@ WSGI_APPLICATION = 'nexus.wsgi.application'
 # =========================
 # Database (Railway-friendly)
 # =========================
+import logging
+logger = logging.getLogger(__name__)
+
 if 'DATABASE_URL' in os.environ:
+    database_url = os.environ.get('DATABASE_URL')
+    logger.info(f"Using DATABASE_URL: {database_url[:50]}...")  # Log first 50 chars
     DATABASES = {
         'default': dj_database_url.config(
-            default=config('DATABASE_URL'),
+            default=database_url,
             conn_max_age=600
         )
     }
 else:
-    # Fallback for local development
+    logger.info("DATABASE_URL not found, using individual DB settings")
+    # Fallback for local development or if DATABASE_URL not set
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='nexus_db'),
+            'NAME': config('DB_NAME', default='railway'),
             'USER': config('DB_USER', default='postgres'),
             'PASSWORD': config('DB_PASSWORD', default=''),
             'HOST': config('DB_HOST', default='localhost'),
             'PORT': config('DB_PORT', default='5432'),
         }
     }
+
+# Debug database configuration
+logger.info(f"Database configuration: {DATABASES['default']['ENGINE']} at {DATABASES['default'].get('HOST', 'N/A')}")
 
 # =========================
 # Password validators
