@@ -33,6 +33,24 @@ else:
     print('✅ Superuser already exists')
 "
 
+# Populate database with TMDb movies (only if database is empty)
+echo "Checking if database needs movie data..."
+python manage.py shell -c "
+from movies.models import Movie
+
+if Movie.objects.count() == 0:
+    print('Database is empty, fetching movies from TMDb...')
+    # This will be handled by the management command
+    exit(0)
+else:
+    print(f'Database already has {Movie.objects.count()} movies')
+    exit(1)
+" && {
+    echo "Fetching movies from TMDb (popular, top-rated, upcoming, now-playing, trending)..."
+    python manage.py fetch_tmdb_movies --pages=2 || echo "Failed to fetch movies, continuing anyway..."
+    echo "Database population completed!"
+} || echo "Skipping movie fetch - database already populated"
+
 # Start single Celery worker with limited resources (Railway free tier)
 echo "Starting Celery worker with limited resources..."
 celery -A nexus worker --loglevel=info --concurrency=1 --max-memory-per-child=100000 --detach --pidfile=/tmp/celery_worker.pid
