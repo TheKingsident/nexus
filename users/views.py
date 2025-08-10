@@ -114,3 +114,50 @@ def current_user(request):
         'user': UserSerializer(request.user).data,
         'profile': UserProfileSerializer(request.user.profile).data
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def admin_status(request):
+    """Check if admin/superuser exists"""
+    superuser_exists = User.objects.filter(is_superuser=True).exists()
+    superuser_count = User.objects.filter(is_superuser=True).count()
+    total_users = User.objects.count()
+    
+    return Response({
+        'superuser_exists': superuser_exists,
+        'superuser_count': superuser_count,
+        'total_users': total_users,
+        'message': 'Superuser exists' if superuser_exists else 'No superuser found'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_admin(request):
+    """Create admin user via API (backup method)"""
+    # Only allow if no superuser exists
+    if User.objects.filter(is_superuser=True).exists():
+        return Response({
+            'error': 'Superuser already exists'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    username = request.data.get('username', 'admin')
+    email = request.data.get('email', 'admin@example.com')
+    password = request.data.get('password', 'admin123')
+    
+    try:
+        user = User.objects.create_superuser(
+            username=username,
+            email=email,
+            password=password
+        )
+        return Response({
+            'message': f'Superuser "{username}" created successfully',
+            'username': username,
+            'email': email
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({
+            'error': f'Failed to create superuser: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
