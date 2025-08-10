@@ -1,15 +1,12 @@
 [build]
-builder = "heroku/buildpacks:20"
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/api/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
 
 [env]
 PYTHONUNBUFFERED = "1"
 PORT = "8000"
-
-[services.web]
-command = "gunicorn nexus.wsgi:application --bind 0.0.0.0:$PORT"
-
-[services.worker]
-command = "celery -A nexus worker --loglevel=info"
-
-[services.beat]
-command = "celery -A nexus beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"

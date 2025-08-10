@@ -21,11 +21,13 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
     'django_filters',
+    'django_celery_beat',
     'movies',
     'users',
     'drf_yasg',
@@ -69,13 +71,25 @@ WSGI_APPLICATION = 'nexus.wsgi.application'
 # =========================
 # Database (Railway-friendly)
 # =========================
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=config('DATABASE_URL'),
+            conn_max_age=600
+        )
+    }
+else:
+    # Fallback for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='nexus_db'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
+    }
 
 # =========================
 # Password validators
@@ -137,7 +151,16 @@ REST_FRAMEWORK = {
 # =========================
 # CORS settings
 # =========================
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Add production domain if not debug
+if not DEBUG:
+    cors_origins = config('CORS_ALLOWED_ORIGINS', default='')
+    if cors_origins:
+        CORS_ALLOWED_ORIGINS.extend(cors_origins.split(','))
 
 # =========================
 # Celery settings (Railway Redis + RabbitMQ optional)
@@ -170,34 +193,12 @@ CACHES = {
     }
 }
 
-# Auto-create superuser if environment variables are set
-if os.environ.get("DJANGO_SUPERUSER_USERNAME") and \
-   os.environ.get("DJANGO_SUPERUSER_EMAIL") and \
-   os.environ.get("DJANGO_SUPERUSER_PASSWORD"):
-
-    # This runs only when calling 'python manage.py createsuperuser --noinput'
-    from django.core.management.base import BaseCommand
-    from django.contrib.auth import get_user_model
-
-    def create_default_superuser():
-        User = get_user_model()
-        username = os.environ["DJANGO_SUPERUSER_USERNAME"]
-        email = os.environ["DJANGO_SUPERUSER_EMAIL"]
-        password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
-
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_superuser(
-                username=username,
-                email=email,
-                password=password
-            )
-            print(f"Superuser '{username}' created successfully.")
-        else:
-            print(f"Superuser '{username}' already exists.")
-
-    # We patch the default 'createsuperuser' command to be noinput-friendly
-    class Command(BaseCommand):
-        help = "Creates a superuser without interactive prompts if env vars are set"
-
-        def handle(self, *args, **options):
-            create_default_superuser()
+# =========================
+# Celery Configuration
+# =========================
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/1')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
