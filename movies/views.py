@@ -113,11 +113,14 @@ class FavoriteMoviesView(generics.ListAPIView):
     """List user's favorite movies"""
     serializer_class = MovieListSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = []  # Disable filtering to avoid the queryset issue
 
     def get_queryset(self):
         user = self.request.user
-        favorite_movies = FavoriteMovie.objects.filter(user=user).select_related('movie')
-        return [fav.movie for fav in favorite_movies]  # Return actual Movie objects
+        # Get the movie IDs from user's favorites
+        favorite_movie_ids = FavoriteMovie.objects.filter(user=user).values_list('movie_id', flat=True)
+        # Return a proper QuerySet of Movie objects
+        return Movie.objects.filter(id__in=favorite_movie_ids).select_related().prefetch_related('genres')
 
 
 @method_decorator(cache_page(60 * 5), name='dispatch')
@@ -205,13 +208,15 @@ def add_favorite(request, movie_id):
     except Movie.DoesNotExist:
         return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
-@api_view(['DELETE'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def remove_favorite(request, movie_id):
     """Remove movie from user's favorites"""
     try:
         favorite = FavoriteMovie.objects.get(user=request.user, movie_id=movie_id)
         favorite.delete()
-        return Response({'message': 'Movie removed from favorites'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'Movie removed from favorites'}, status=status.HTTP_200_OK)
+    except FavoriteMovie.DoesNotExist:
+        return Response({'error': 'Movie not in favorites'}, status=status.HTTP_404_NOT_FOUND)
     except FavoriteMovie.DoesNotExist:
         return Response({'error': 'Movie not in favorites'}, status=status.HTTP_404_NOT_FOUND)
