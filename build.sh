@@ -1,12 +1,15 @@
-#!/bin/sh
-# build.sh - Railway build script
-
+#!/bin/bash
 set -e
 
-echo "Installing Python dependencies..."
+echo "Building Nexus application..."
+
+echo "Installing dependencies..."
 pip install -r requirements.txt
+
+echo "Creating staticfiles directory..."
+mkdir -p staticfiles
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Build completed!"
+echo "Build completed successfully!"
