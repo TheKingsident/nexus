@@ -25,23 +25,25 @@ class UserRegistrationView(generics.CreateAPIView):
         
         user = serializer.save()
 
-        # Try to send email via Celery, fallback to synchronous if failed
+        # For now, send email synchronously since Celery worker may not be running on Railway
+        from django.core.mail import send_mail
+        from django.conf import settings
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
         try:
-            send_welcome_email.delay(user.email, user.username)
+            result = send_mail(
+                'Welcome to Nexus!',
+                f'Hi {user.username},\n\nThank you for registering at Nexus. We are excited to have you on board!',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            logger.info(f"Welcome email sent successfully to {user.email}, result: {result}")
         except Exception as e:
-            # If Celery is not available, send email synchronously
-            from django.core.mail import send_mail
-            from django.conf import settings
-            try:
-                send_mail(
-                    'Welcome to Nexus!',
-                    f'Hi {user.username},\n\nThank you for registering at Nexus. We are excited to have you on board!',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass  # Don't fail registration if email fails
+            logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
+            # Don't fail registration if email fails
         
         # Create token for the new user
         token, created = Token.objects.get_or_create(user=user)
@@ -139,10 +141,21 @@ def admin_status(request):
     superuser_count = User.objects.filter(is_superuser=True).count()
     total_users = User.objects.count()
     
+    # Check Celery status
+    try:
+        from celery import current_app
+        celery_status = current_app.control.inspect().stats()
+        celery_active = bool(celery_status)
+    except Exception as e:
+        celery_status = f"Error: {str(e)}"
+        celery_active = False
+    
     return Response({
         'superuser_exists': superuser_exists,
         'superuser_count': superuser_count,
         'total_users': total_users,
+        'celery_active': celery_active,
+        'celery_status': celery_status,
         'message': 'Superuser exists' if superuser_exists else 'No superuser found'
     })
 
