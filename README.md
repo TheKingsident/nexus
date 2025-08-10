@@ -45,23 +45,23 @@ celery -A nexus worker --loglevel=info
 - **Swagger**: http://localhost:8000/swagger/
 - **Redis**: `redis-cli ping` (should return PONG)
 - **Cache test**: 
-  # 🎬 Nexus - Movie Recommendation Platform
+  # Nexus - Movie Recommendation Platform
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/nexus)
 
 A production-ready Django REST API for movie recommendations, featuring real-time data from The Movie Database (TMDb), Redis caching, asynchronous email processing, and comprehensive user management.
 
-## 🌐 Live Demo
+## Live Demo
 
 **API Base URL**: https://nexus-kingsley.up.railway.app
 
-- **📚 API Documentation**: https://nexus-kingsley.up.railway.app/api/docs/
-- **🔧 Admin Panel**: https://nexus-kingsley.up.railway.app/admin/
-- **📊 API Root**: https://nexus-kingsley.up.railway.app/api/
+- **API Documentation**: https://nexus-kingsley.up.railway.app/api/docs/
+- **Admin Panel**: https://nexus-kingsley.up.railway.app/admin/
+- **API Root**: https://nexus-kingsley.up.railway.app/api/
 
-## ✨ Features
+## Features
 
-### 🎭 Movie Features
+### Movie Features
 - **Multiple Movie Categories**: Popular, Top Rated, Upcoming, Now Playing
 - **Trending Movies**: Daily and weekly trending content
 - **Genre Management**: Organized movie categorization
@@ -69,14 +69,14 @@ A production-ready Django REST API for movie recommendations, featuring real-tim
 - **TMDb Integration**: Real-time movie data and posters
 - **Caching**: Redis-powered performance optimization
 
-### 👤 User Features  
+### User Features  
 - **Authentication**: Token-based API authentication
 - **User Profiles**: Customizable user information
 - **Favorites System**: Save and manage favorite movies
 - **Email Notifications**: Async welcome emails via Celery
 - **Admin Interface**: Full Django admin panel
 
-### 🚀 Technical Features
+### Technical Features
 - **REST API**: Comprehensive RESTful endpoints
 - **Database**: PostgreSQL with optimized queries
 - **Caching**: Redis for high-performance responses
@@ -84,7 +84,39 @@ A production-ready Django REST API for movie recommendations, featuring real-tim
 - **Documentation**: Auto-generated Swagger/OpenAPI docs
 - **Production Ready**: Deployed on Railway with health checks
 
-## 🏗️ Tech Stack
+## Database Schema
+
+The Nexus platform uses a carefully designed relational database schema to manage users, movies, and their relationships efficiently.
+
+![Nexus ERD](nexus_enhanced_erd.png)
+
+### Core Models
+
+**User Management**
+- **User**: Django's built-in user model with authentication
+- **UserProfile**: Extended user information (bio, date of birth, timestamps)
+- **Token**: API authentication tokens for secure access
+
+**Movie Content**
+- **Movie**: Core movie data synchronized with TMDb API
+- **Genre**: Movie categorization system
+- **Movie_Genre**: Many-to-many relationship between movies and genres
+
+**Relationships & Analytics**
+- **FavoriteMovie**: User-movie favorites tracking
+- **TrendingMovie**: Daily and weekly trending movie analytics
+
+### Key Relationships
+- **User to UserProfile**: One-to-one relationship for extended profile data
+- **User to Token**: One-to-one relationship for API authentication
+- **User to FavoriteMovie**: One-to-many for user's favorite movies
+- **Movie to FavoriteMovie**: One-to-many for movies favorited by users
+- **Movie to TrendingMovie**: One-to-many for trending periods
+- **Movie to Genre**: Many-to-many through Movie_Genre junction table
+
+## Tech Stack
+
+## Tech Stack
 
 - **Backend**: Django 5.1 + Django REST Framework
 - **Database**: PostgreSQL (Railway managed)
@@ -95,7 +127,7 @@ A production-ready Django REST API for movie recommendations, featuring real-tim
 - **Deployment**: Railway with Nixpacks
 - **External API**: The Movie Database (TMDb)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.11+
@@ -180,9 +212,9 @@ Terminal 3 - Redis (if not system service):
 redis-server
 ```
 
-## 📡 API Endpoints
+## API Endpoints
 
-### 🎬 Movies
+### Movies
 ```
 GET  /api/movies/                    # All movies
 GET  /api/movies/{id}/               # Movie detail
@@ -196,7 +228,7 @@ GET  /api/movies/search/?q=query     # Search movies
 GET  /api/movies/genres/             # All genres
 ```
 
-### 👤 Users
+### Users
 ```
 POST /api/users/register/            # User registration
 POST /api/users/login/               # User login
@@ -206,14 +238,14 @@ GET  /api/users/profile/             # User profile
 PUT  /api/users/profile/             # Update profile
 ```
 
-### ⭐ Favorites
+### Favorites
 ```
 GET  /api/movies/favorites/                    # User's favorites
 POST /api/movies/favorites/add/{movie_id}/     # Add to favorites
 POST /api/movies/favorites/remove/{movie_id}/  # Remove from favorites
 ```
 
-### 🔧 Admin & Health
+### Admin & Health
 ```
 GET  /api/users/admin-status/        # Check superuser status
 POST /api/users/create-admin/        # Create admin user
@@ -221,7 +253,7 @@ GET  /health/                        # Health check
 GET  /api/                          # API root
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Railway Deployment (Recommended)
 
@@ -262,39 +294,39 @@ For other platforms, ensure:
 - Environment variables configured
 - Run: `./start.sh` or individual commands from Procfile
 
-## 🏛️ Project Structure
+## Project Structure
 
 ```
 nexus/
-├── 📁 nexus/                    # Django project settings
+├── nexus/                    # Django project settings
 │   ├── settings.py              # Django configuration
 │   ├── urls.py                  # Main URL routing
 │   ├── wsgi.py                  # WSGI application
 │   └── celery.py                # Celery configuration
-├── 📁 movies/                   # Movies app
+├── movies/                   # Movies app
 │   ├── models.py                # Movie, Genre, FavoriteMovie models
 │   ├── views.py                 # Movie API views with caching
 │   ├── serializers.py           # DRF serializers
 │   ├── urls.py                  # Movie endpoints
-│   └── 📁 management/commands/
+│   └── management/commands/
 │       └── fetch_tmdb_movies.py # TMDb data population
-├── 📁 users/                    # Users app  
+├── users/                    # Users app  
 │   ├── models.py                # UserProfile model
 │   ├── views.py                 # Authentication & profile views
 │   ├── serializers.py           # User serializers
 │   ├── urls.py                  # User endpoints
 │   ├── tasks.py                 # Celery email tasks
-│   └── 📁 management/commands/
+│   └── management/commands/
 │       └── create_admin.py      # Superuser creation
-├── 📁 staticfiles/              # Static files (auto-generated)
-├── 🐳 Procfile                  # Process definitions
-├── 🚀 start.sh                  # Startup script with auto-setup
-├── 🛠️ railway.toml              # Railway configuration  
-├── 📋 requirements.txt          # Python dependencies
-└── 📖 README.md                 # This file
+├── staticfiles/              # Static files (auto-generated)
+├── Procfile                  # Process definitions
+├── start.sh                  # Startup script with auto-setup
+├── railway.toml              # Railway configuration  
+├── requirements.txt          # Python dependencies
+└── README.md                 # This file
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Caching Strategy
 - **Popular movies**: 15 minutes
@@ -313,7 +345,7 @@ nexus/
 - **Query optimization**: Select related for foreign keys
 - **Indexing**: Optimized for common queries
 
-## 🧪 Testing
+## Testing
 
 ### API Testing
 ```bash
@@ -321,8 +353,8 @@ nexus/
 curl https://nexus-kingsley.up.railway.app/api/movies/popular/
 
 # Test user registration
-curl -X POST https://nexus-kingsley.up.railway.app/api/users/register/ 
-  -H "Content-Type: application/json" 
+curl -X POST https://nexus-kingsley.up.railway.app/api/users/register/ \
+  -H "Content-Type: application/json" \
   -d '{"username":"testuser","email":"test@example.com","password":"testpass123"}'
 
 # Test admin status
@@ -338,7 +370,7 @@ curl https://nexus-kingsley.up.railway.app/health/
 curl https://nexus-kingsley.up.railway.app/api/
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -372,7 +404,7 @@ railway logs
 python manage.py runserver --verbosity=2
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. **Fork the repository**
 2. **Create feature branch**: `git checkout -b feature/amazing-feature`
@@ -386,17 +418,17 @@ python manage.py runserver --verbosity=2
 - Update documentation
 - Ensure all tests pass
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## Support
 
 - **Email**: hello@kingsleyusa.dev
 - **Issues**: [GitHub Issues](https://github.com/TheKingsident/nexus/issues)
 - **Documentation**: [API Docs](https://nexus-kingsley.up.railway.app/api/docs/)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **The Movie Database (TMDb)** for providing movie data
 - **Railway** for hosting infrastructure
@@ -405,7 +437,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-⭐ **Star this repository if you found it helpful!**sonalized recommendations.
+Star this repository if you found it helpful!sonalized recommendations.
 
 ## Features
 

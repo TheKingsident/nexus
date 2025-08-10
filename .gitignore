@@ -66,3 +66,8 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 .gitignore
+generate_erd.py
+generate_enhanced_erd.py
+nexus_erd.png
+nexus_erd.dot
+nexus_enhanced_erd.dot
