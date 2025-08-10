@@ -21,7 +21,7 @@ User = get_user_model()
 # Check if superuser exists
 if not User.objects.filter(is_superuser=True).exists():
     username = os.getenv('DJANGO_SUPERUSER_USERNAME', 'admin')
-    email = os.getenv('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
+    email = os.getenv('DJANGO_SUPERUSER_EMAIL', 'hello@kingsleyusa.dev')
     password = os.getenv('DJANGO_SUPERUSER_PASSWORD', 'admin123')
     
     try:
