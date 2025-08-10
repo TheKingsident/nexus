@@ -37,6 +37,15 @@ def api_root(request):
     })
 
 
+@api_view(['GET'])
+def health_check(request):
+    """Health check endpoint for Railway"""
+    return Response({
+        'status': 'healthy',
+        'service': 'nexus-api'
+    })
+
+
 schema_view = get_schema_view(
    openapi.Info(
       title="Nexus Movie API",
@@ -49,6 +58,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('health/', health_check, name='health-check'),
     path('api/', api_root, name='api-root'),
     path('api/', include('movies.urls')),
     path('api/', include('users.urls')),

@@ -3,6 +3,8 @@
 
 set -e
 
+echo "Starting release process..."
+
 echo "Applying migrations..."
 python manage.py migrate --noinput
 
@@ -22,9 +24,9 @@ if not User.objects.filter(username=username).exists():
     print('Superuser created successfully')
 else:
     print('Superuser already exists')
-"
+" || echo "Failed to create superuser, continuing..."
 else
     echo "Superuser environment variables not set, skipping..."
 fi
 
-echo "Release script completed!"
+echo "Release process completed successfully!"
