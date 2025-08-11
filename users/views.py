@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from .models import UserProfile
 from .serializers import (
     UserSerializer, UserProfileSerializer, UserRegistrationSerializer, 
-    UserProfileUpdateSerializer
+    UserProfileUpdateSerializer, UserLoginSerializer
 )
 from .tasks import send_welcome_email
 
@@ -28,18 +28,14 @@ class UserRegistrationView(generics.CreateAPIView):
         
         user = serializer.save()
 
-        # Try Celery first, fallback to synchronous
         try:
-            # Test if Celery is available
             from celery import current_app
             celery_status = current_app.control.inspect().stats()
             if celery_status:
-                # Celery is available, use async task
                 send_welcome_email.delay(user.email, user.username)
             else:
                 raise Exception("No Celery workers available")
         except Exception as e:
-            # Fallback to synchronous email
             from django.core.mail import send_mail
             from django.conf import settings
             import logging
@@ -69,31 +65,25 @@ class UserRegistrationView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
     """User login endpoint"""
-    username = request.data.get('username')
-    password = request.data.get('password')
+    serializer = UserLoginSerializer(data=request.data)
     
-    if not username or not password:
-        return Response({
-            'error': 'Username and password are required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    user = authenticate(username=username, password=password)
-    
-    if user:
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
+        
         return Response({
             'user': UserSerializer(user).data,
             'token': token.key,
             'message': 'Login successful'
-        })
+        }, status=status.HTTP_200_OK)
     else:
         return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -101,15 +91,28 @@ def login_view(request):
 def logout_view(request):
     """User logout endpoint"""
     try:
-        # Delete the user's token to logout
-        request.user.auth_token.delete()
+        auth_header = request.META.get('HTTP_AUTHORIZATION')
+        if auth_header and auth_header.startswith('Token '):
+            token_key = auth_header.split(' ')[1]
+            token = Token.objects.get(key=token_key)
+            token.delete()
+            return Response({
+                'message': 'Logout successful'
+            }, status=status.HTTP_200_OK)
+        else:
+            token = Token.objects.get(user=request.user)
+            token.delete()
+            return Response({
+                'message': 'Logout successful'
+            }, status=status.HTTP_200_OK)
+    except Token.DoesNotExist:
         return Response({
-            'message': 'Logout successful'
-        })
-    except:
-        return Response({
-            'error': 'Error logging out'
+            'error': 'No active session found'
         }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': f'Error logging out: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -178,7 +181,6 @@ def admin_status(request):
 @permission_classes([AllowAny])
 def create_admin(request):
     """Create admin user via API (backup method)"""
-    # Only allow if no superuser exists
     if User.objects.filter(is_superuser=True).exists():
         return Response({
             'error': 'Superuser already exists'
