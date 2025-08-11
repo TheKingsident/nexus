@@ -69,7 +69,7 @@ class UserRegistrationView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
 def login_view(request):
     """User login endpoint"""

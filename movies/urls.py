@@ -15,9 +15,9 @@ urlpatterns = [
     path('genres/<int:pk>/', GenreDetailView.as_view(), name='genre-detail'),
     
     # Movies
-    path('movies/', MovieListView.as_view(), name='movie-list'),  # Shows ALL movies
-    path('movies/<int:pk>/', MovieDetailView.as_view(), name='movie-detail'),
-    
+    path('', MovieListView.as_view(), name='movie-list'),
+    path('<int:pk>/', MovieDetailView.as_view(), name='movie-detail'),
+
     # Movie Categories
     path('popular/', PopularMoviesView.as_view(), name='popular-movies'),
     path('top-rated/', TopRatedMoviesView.as_view(), name='top-rated-movies'),
