@@ -33,23 +33,24 @@ else:
     print('✅ Superuser already exists')
 "
 
-# Populate database with TMDb movies (only if database is empty)
+# Populate database with TMDb movies (fetch if database has fewer than 500 movies)
 echo "Checking if database needs movie data..."
 python manage.py shell -c "
 from movies.models import Movie
 
-if Movie.objects.count() == 0:
-    print('Database is empty, fetching movies from TMDb...')
+movie_count = Movie.objects.count()
+if movie_count < 500:
+    print(f'Database has {movie_count} movies (less than 500), fetching more from TMDb...')
     # This will be handled by the management command
     exit(0)
 else:
-    print(f'Database already has {Movie.objects.count()} movies')
+    print(f'Database already has {movie_count} movies (500+), skipping fetch')
     exit(1)
 " && {
     echo "Fetching movies from TMDb (popular, top-rated, upcoming, now-playing, trending)..."
-    python manage.py fetch_tmdb_movies --pages=20 || echo "Failed to fetch movies, continuing anyway..."
+    python manage.py fetch_tmdb_movies --pages=40 || echo "Failed to fetch movies, continuing anyway..."
     echo "Database population completed!"
-} || echo "Skipping movie fetch - database already populated"
+} || echo "Skipping movie fetch - database has sufficient movies"
 
 # Start single Celery worker with limited resources (Railway free tier)
 echo "Starting Celery worker with limited resources..."
