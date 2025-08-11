@@ -47,7 +47,7 @@ else:
     exit(1)
 " && {
     echo "Fetching movies from TMDb (popular, top-rated, upcoming, now-playing, trending)..."
-    python manage.py fetch_tmdb_movies --pages=2 || echo "Failed to fetch movies, continuing anyway..."
+    python manage.py fetch_tmdb_movies --pages=20 || echo "Failed to fetch movies, continuing anyway..."
     echo "Database population completed!"
 } || echo "Skipping movie fetch - database already populated"
 
