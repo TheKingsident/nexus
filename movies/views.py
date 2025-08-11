@@ -191,7 +191,7 @@ def movie_search(request):
     })
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def add_favorite(request, movie_id):
     """Add movie to user's favorites"""
@@ -208,7 +208,8 @@ def add_favorite(request, movie_id):
     except Movie.DoesNotExist:
         return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
-@api_view(['POST'])
+
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def remove_favorite(request, movie_id):
     """Remove movie from user's favorites"""
@@ -216,7 +217,5 @@ def remove_favorite(request, movie_id):
         favorite = FavoriteMovie.objects.get(user=request.user, movie_id=movie_id)
         favorite.delete()
         return Response({'message': 'Movie removed from favorites'}, status=status.HTTP_200_OK)
-    except FavoriteMovie.DoesNotExist:
-        return Response({'error': 'Movie not in favorites'}, status=status.HTTP_404_NOT_FOUND)
     except FavoriteMovie.DoesNotExist:
         return Response({'error': 'Movie not in favorites'}, status=status.HTTP_404_NOT_FOUND)
