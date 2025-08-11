@@ -22,7 +22,7 @@ class Movie(models.Model):
     release_date = models.DateField(null=True, blank=True)
     
     # TMDb specific fields
-    poster_path = models.CharField(max_length=255, blank=True)
+    poster_path = models.CharField(max_length=255, blank=True, null=True)
     backdrop_path = models.CharField(max_length=255, blank=True, null=True)
     vote_average = models.FloatField(default=0.0)
     vote_count = models.IntegerField(default=0)
