@@ -19,8 +19,9 @@ A production-ready Django REST API for movie recommendations, featuring real-tim
 - **Trending Movies**: Daily and weekly trending content
 - **Genre Management**: Organized movie categorization
 - **Search & Filtering**: Advanced movie discovery
-- **TMDb Integration**: Real-time movie data and posters
+- **TMDb Integration**: Real-time movie data and posters (40 pages per endpoint)
 - **Caching**: Redis-powered performance optimization
+- **Large Dataset**: Automatically populates ~4,800 movies from multiple TMDb endpoints
 
 ### User Features  
 - **Authentication**: Token-based API authentication
@@ -143,7 +144,7 @@ python manage.py createsuperuser
 
 6. **Populate Database**
 ```bash
-python manage.py fetch_tmdb_movies
+python manage.py fetch_tmdb_movies --pages=40
 ```
 
 7. **Start Services**
@@ -235,6 +236,7 @@ GET  /api/                          # API root
    - Railway auto-deploys on git push
    - Database migrations run automatically
    - Superuser created automatically if env vars set
+   - Movie database populated automatically (40 pages from TMDb)
 
 ### Manual Deployment
 
@@ -295,6 +297,8 @@ nexus/
 - **Connection pooling**: Optimized for Railway PostgreSQL
 - **Query optimization**: Select related for foreign keys
 - **Indexing**: Optimized for common queries
+- **Auto-population**: Fetches 40 pages (~800 movies per endpoint) from TMDb
+- **Smart fetching**: Only fetches new movies if database has fewer than 500 movies
 
 ## Testing
 
@@ -310,6 +314,9 @@ curl -X POST https://nexus-kingsley.up.railway.app/api/users/register/ \
 
 # Test admin status
 curl https://nexus-kingsley.up.railway.app/api/users/admin-status/
+
+# Manually fetch more movies (40 pages)
+python manage.py fetch_tmdb_movies --pages=40
 ```
 
 ### Health Checks
@@ -329,6 +336,9 @@ curl https://nexus-kingsley.up.railway.app/api/
 ```bash
 # Verify API key
 curl "https://api.themoviedb.org/3/movie/popular?api_key=YOUR_API_KEY"
+
+# Check if fetch command is working
+python manage.py fetch_tmdb_movies --pages=5  # Test with fewer pages first
 ```
 
 **2. Email Not Sending**
