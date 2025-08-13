@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core Django settings
 # =========================
 SECRET_KEY = config('SECRET_KEY', default='unsafe-secret-key')
-DEBUG = os.environ.get('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Railway-friendly ALLOWED_HOSTS - allow all Railway domains
 # Railway-specific settings
