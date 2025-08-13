@@ -125,31 +125,120 @@ class FavoriteMoviesView(generics.ListAPIView):
 
 @method_decorator(cache_page(60 * 5), name='dispatch')
 class TrendingDayMoviesView(generics.ListAPIView):
-    """Get trending movies today"""
+    """Get trending movies today using advanced trending algorithm"""
     serializer_class = MovieListSerializer
     permission_classes = []
     pagination_class = None
     
     def get_queryset(self):
-        # Return movies with high recent vote activity (proxy for trending)
-        return Movie.objects.filter(
-            vote_count__gte=50,
-            created_at__gte=timezone.now() - timedelta(days=7)  # Recently added
-        ).order_by('-vote_average', '-vote_count')[:20]
+        from django.db.models import F, Case, When, FloatField, Count
+        from django.db.models.functions import Greatest
+        
+        now = timezone.now()
+        today = now.date()
+        yesterday = today - timedelta(days=1)
+        week_ago = today - timedelta(days=7)
+        
+        # Advanced trending algorithm considering multiple factors
+        return Movie.objects.annotate(
+            # Recent release boost (movies released in last 30 days get higher score)
+            recency_boost=Case(
+                When(release_date__gte=today - timedelta(days=7), then=3.0),
+                When(release_date__gte=today - timedelta(days=30), then=2.0),
+                When(release_date__gte=today - timedelta(days=90), then=1.5),
+                default=1.0,
+                output_field=FloatField()
+            ),
+            
+            # Vote momentum (higher vote count = more popular recently)
+            vote_momentum=Case(
+                When(vote_count__gte=1000, then=2.5),
+                When(vote_count__gte=500, then=2.0),
+                When(vote_count__gte=100, then=1.5),
+                When(vote_count__gte=50, then=1.2),
+                default=1.0,
+                output_field=FloatField()
+            ),
+            
+            # Rating quality filter (good movies trend more)
+            quality_score=Case(
+                When(vote_average__gte=8.0, then=2.0),
+                When(vote_average__gte=7.0, then=1.5),
+                When(vote_average__gte=6.0, then=1.2),
+                When(vote_average__gte=5.0, then=1.0),
+                default=0.5,
+                output_field=FloatField()
+            ),
+            
+            # Database freshness (recently added to our DB)
+            freshness_score=Case(
+                When(created_at__gte=now - timedelta(days=1), then=1.5),
+                When(created_at__gte=now - timedelta(days=7), then=1.2),
+                default=1.0,
+                output_field=FloatField()
+            ),
+            
+            # Calculate trending score
+            trending_score=F('vote_average') * F('recency_boost') * F('vote_momentum') * F('quality_score') * F('freshness_score')
+        ).filter(
+            # Only include movies with minimum thresholds
+            vote_count__gte=10,  # At least 10 votes
+            vote_average__gte=4.0  # At least 4.0 rating
+        ).order_by('-trending_score', '-vote_count', '-vote_average')[:20]
 
 
 class TrendingWeekMoviesView(generics.ListAPIView):
-    """Get trending movies this week"""
+    """Get trending movies this week using weekly momentum algorithm"""
     serializer_class = MovieListSerializer
     permission_classes = []
     pagination_class = None
     
     def get_queryset(self):
-        # Return movies with high vote counts and ratings (proxy for trending)
-        return Movie.objects.filter(
-            vote_count__gte=100,
-            created_at__gte=timezone.now() - timedelta(days=30)  # Recently added
-        ).order_by('-vote_count', '-vote_average')[:20]
+        from django.db.models import F, Case, When, FloatField
+        
+        now = timezone.now()
+        today = now.date()
+        week_ago = today - timedelta(days=7)
+        month_ago = today - timedelta(days=30)
+        
+        # Weekly trending algorithm with different weights
+        return Movie.objects.annotate(
+            # Release timing boost (different weights for weekly trending)
+            weekly_recency_boost=Case(
+                When(release_date__gte=today - timedelta(days=14), then=2.5),
+                When(release_date__gte=today - timedelta(days=60), then=1.8),
+                When(release_date__gte=today - timedelta(days=180), then=1.3),
+                default=1.0,
+                output_field=FloatField()
+            ),
+            
+            # Vote scale for weekly (higher thresholds)
+            weekly_vote_momentum=Case(
+                When(vote_count__gte=2000, then=3.0),
+                When(vote_count__gte=1000, then=2.5),
+                When(vote_count__gte=500, then=2.0),
+                When(vote_count__gte=200, then=1.5),
+                When(vote_count__gte=100, then=1.2),
+                default=1.0,
+                output_field=FloatField()
+            ),
+            
+            # Quality remains important for weekly
+            weekly_quality_score=Case(
+                When(vote_average__gte=8.5, then=2.5),
+                When(vote_average__gte=7.5, then=2.0),
+                When(vote_average__gte=6.5, then=1.5),
+                When(vote_average__gte=5.5, then=1.0),
+                default=0.7,
+                output_field=FloatField()
+            ),
+            
+            # Weekly trending score
+            weekly_trending_score=F('vote_average') * F('weekly_recency_boost') * F('weekly_vote_momentum') * F('weekly_quality_score')
+        ).filter(
+            vote_count__gte=50,  # Higher threshold for weekly
+            vote_average__gte=5.0
+        ).order_by('-weekly_trending_score', '-vote_count', '-vote_average')[:20]
 
 
 @api_view(['GET'])
