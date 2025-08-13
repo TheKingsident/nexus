@@ -72,7 +72,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('', simple_health, name='root-health'),  # Root path for Railway health check
+    path('', simple_health, name='root-health'),
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health-check'),
     path('api/', api_root, name='api-root'),
