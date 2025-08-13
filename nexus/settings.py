@@ -16,7 +16,7 @@ DEBUG = os.environ.get('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['*']
 
 # Security settings for Railway
-SECURE_SSL_REDIRECT = False  # Railway handles SSL
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_TZ = True
 
@@ -29,9 +29,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 
-# Railway debugging - temporary
 if os.getenv('RAILWAY_ENVIRONMENT'):
-    DEBUG = True  # Temporarily enable for Railway debugging
+    DEBUG = False
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -103,14 +102,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nexus.wsgi.application'
 
 # =========================
-# Database (Railway-friendly)
+# Database
 # =========================
 import logging
 logger = logging.getLogger(__name__)
 
 if 'DATABASE_URL' in os.environ:
     database_url = os.environ.get('DATABASE_URL')
-    logger.info(f"Using DATABASE_URL: {database_url[:50]}...")  # Log first 50 chars
+    logger.info(f"Using DATABASE_URL: {database_url[:50]}...")
     DATABASES = {
         'default': dj_database_url.config(
             default=database_url,
