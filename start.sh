@@ -39,13 +39,13 @@ python manage.py shell -c "
 from movies.models import Movie
 
 movie_count = Movie.objects.count()
-if movie_count < 2500:
-    print(f'Database has {movie_count} movies (less than 2500), fetching more from TMDb...')
+if movie_count < 2000:
+    print(f'Database has {movie_count} movies (less than 2000), fetching more from TMDb...')
     print(f'Current Movie count: {movie_count}')
     # This will be handled by the management command
     exit(0)
 else:
-    print(f'Database already has {movie_count} movies (500+), skipping fetch')
+    print(f'Database already has {movie_count} movies (2000+), skipping fetch')
     exit(1)
 " && {
     echo "Fetching movies from TMDb (popular, top-rated, upcoming, now-playing, trending)..."
