@@ -39,8 +39,8 @@ python manage.py shell -c "
 from movies.models import Movie
 
 movie_count = Movie.objects.count()
-if movie_count < 1500:
-    print(f'Database has {movie_count} movies (less than 1500), fetching more from TMDb...')
+if movie_count < 2500:
+    print(f'Database has {movie_count} movies (less than 2500), fetching more from TMDb...')
     print(f'Current Movie count: {movie_count}')
     # This will be handled by the management command
     exit(0)
